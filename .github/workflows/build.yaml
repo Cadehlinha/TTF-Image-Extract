@@ -1,0 +1,28 @@
+name: Build binaries for Linux & Windows
+on: workflow_dispatch
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - run: |
+          python -m pip install -r src/requirements.txt
+          python -m PyInstaller --onefile --noconsole --icon=Assets/TTF_Logo.ico src/FontExtract-GUI.py
+
+      - name: Set release date
+        shell: bash
+        run: echo "RELEASE_DATE=$(date -u +%Y.%m.%d)" >> ${GITHUB_ENV}
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ env.RELEASE_DATE }}
+          tag:  ${{ env.RELEASE_DATE }}
+          artifacts: "dist/FontExtract-GUI.exe"
+          token: ${{ secrets.REPO_TOKEN }}
+          allowUpdates: true
+          draft: true
